@@ -287,6 +287,7 @@ td.cb-col,th.cb-col{text-align:center!important;padding-left:4px!important;font-
     <div class="kpi"><div class="kpi-lbl">Employees</div><div class="kpi-val" id="dEmps">—</div><div class="kpi-sub">In roster</div></div>
     <div class="kpi"><div class="kpi-lbl">Paid YTD</div><div class="kpi-val" id="dPaid">—</div><div class="kpi-sub" id="dPaidY">This year</div></div>
     <div class="kpi"><div class="kpi-lbl">Companies</div><div class="kpi-val" id="dCos">—</div><div class="kpi-sub">In directory</div></div>
+    <div class="kpi"><div class="kpi-lbl">Owed to Subs</div><div class="kpi-val" id="dashSubDue">—</div><div class="kpi-sub">All subcontractors</div></div>
   </div>
   <div class="mod-grid">
     <div class="mod-card" style="--mc:#0f2027;--mb:#f0f4ff;" onclick="goTo('ts',document.getElementById('snav-ts'))">
@@ -681,7 +682,10 @@ td.cb-col,th.cb-col{text-align:center!important;padding-left:4px!important;font-
       <button class="tab" id="stab-cos" onclick="subTab('cos',this)" style="--tc:#d97706;">🔄 Change Orders</button>
       <button class="tab" id="stab-invoices" onclick="subTab('invoices',this)" style="--tc:#15803d;">🧾 Invoices</button>
       <button class="tab" id="stab-pays" onclick="subTab('pays',this)" style="--tc:#db2777;">💰 Payments</button>
-      <button class="tab" id="stab-info" onclick="subTab('info',this)" style="--tc:#0f766e;">ℹ️ Info</button>
+      <button class="tab" id="stab-estimates" onclick="subTab('estimates',this)" style="--tc:#7c3aed;">📝 Estimates</button>
+      <button class="tab" id="stab-contracts" onclick="subTab('contracts',this)" style="--tc:#0f766e;">📄 Contracts</button>
+      <button class="tab" id="stab-photos" onclick="subTab('photos',this)" style="--tc:#0f766e;">📸 Photos</button>
+      <button class="tab" id="stab-info" onclick="subTab('info',this)" style="--tc:#6b7280;">ℹ️ Info</button>
     </div>
 
     <!-- JOBS TAB -->
@@ -702,7 +706,7 @@ td.cb-col,th.cb-col{text-align:center!important;padding-left:4px!important;font-
         <button class="btn btn-gold" onclick="openCOModal()">+ Add Change Order</button>
       </div>
       <div class="tw"><table><thead><tr>
-        <th>Date</th><th>Job</th><th>Description</th><th>Amount</th><th>Status</th><th>Actions</th>
+        <th>Date</th><th>Job</th><th>Description</th><th>Amount</th><th>Status</th><th>📎 File</th><th>Actions</th>
       </tr></thead><tbody id="subCOsBody"></tbody>
       <tfoot><tr>
         <td colspan="3" style="text-align:right;padding-right:10px;font-weight:700;">Total COs</td>
@@ -717,7 +721,7 @@ td.cb-col,th.cb-col{text-align:center!important;padding-left:4px!important;font-
         <button class="btn btn-success" onclick="openInvModal()">+ Add Invoice</button>
       </div>
       <div class="tw th-green"><table><thead><tr>
-        <th>Date</th><th>Invoice #</th><th>Job</th><th>Description</th><th>Amount</th><th>Status</th><th>Actions</th>
+        <th>Date</th><th>Invoice #</th><th>Job</th><th>Description</th><th>Amount</th><th>Status</th><th>📎 File</th><th>Actions</th>
       </tr></thead><tbody id="subInvsBody"></tbody>
       <tfoot><tr>
         <td colspan="4" style="text-align:right;padding-right:10px;font-weight:700;">Total Invoiced</td>
@@ -738,6 +742,42 @@ td.cb-col,th.cb-col{text-align:center!important;padding-left:4px!important;font-
         <td colspan="2" style="text-align:right;padding-right:10px;font-weight:700;">Total Paid</td>
         <td id="subPayTot" style="font-weight:800;color:#15803d;">$0.00</td><td colspan="4"></td>
       </tr></tfoot></table></div>
+    </div></div>
+
+
+    <!-- ESTIMATES TAB -->
+    <div class="panel" id="sp-estimates"><div class="panel-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-title">📝 Estimates</div>
+        <button class="btn btn-primary" style="background:#7c3aed;" onclick="openEstModal()">+ Add Estimate</button>
+      </div>
+      <div class="tw"><table><thead><tr>
+        <th>Date</th><th>Estimate #</th><th>Job</th><th>Description</th><th>Amount</th><th>Status</th><th>📎 File</th><th>Actions</th>
+      </tr></thead><tbody id="subEstsBody"></tbody>
+      <tfoot><tr>
+        <td colspan="4" style="text-align:right;padding-right:10px;font-weight:700;">Total Estimated</td>
+        <td id="subEstTot" style="font-weight:800;color:#7c3aed;">$0.00</td><td colspan="3"></td>
+      </tr></tfoot></table></div>
+    </div></div>
+
+    <!-- CONTRACTS TAB -->
+    <div class="panel" id="sp-contracts"><div class="panel-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-title">📄 Contracts</div>
+        <button class="btn btn-teal" onclick="openContractModal()">+ Add Contract</button>
+      </div>
+      <div class="tw"><table><thead><tr>
+        <th>Date</th><th>Contract #</th><th>Job</th><th>Description</th><th>Status</th><th>📎 File</th><th>Actions</th>
+      </tr></thead><tbody id="subContractsBody"></tbody></table></div>
+    </div></div>
+
+    <!-- PHOTOS TAB -->
+    <div class="panel" id="sp-photos"><div class="panel-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-title">📸 Work Photos</div>
+        <button class="btn btn-neutral" onclick="openPhotoModal()">+ Add Photo</button>
+      </div>
+      <div id="photosGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;"></div>
     </div></div>
 
     <!-- INFO TAB -->
@@ -1810,6 +1850,59 @@ initApp();
   </div>
 </div></div>
 
+
+<!-- ESTIMATE MODAL -->
+<div class="modal-bg" id="estModal"><div class="modal">
+  <h3>Add Estimate</h3>
+  <div class="modal-grid">
+    <div class="fld full"><label>Job</label><select id="mEstJob"></select></div>
+    <div class="fld"><label>Estimate # *</label><input id="mEstNum" type="text" placeholder="EST-001"></div>
+    <div class="fld"><label>Date</label><input id="mEstDate" type="date"></div>
+    <div class="fld"><label>Amount ($)</label><input id="mEstAmt" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="fld full"><label>Description</label><input id="mEstDesc" type="text" placeholder="Estimate description…"></div>
+    <div class="fld"><label>Status</label>
+      <select id="mEstStatus"><option>Pending</option><option>Approved</option><option>Rejected</option><option>Revised</option></select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-neutral" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-primary" style="background:#7c3aed;" onclick="saveEst()">Save Estimate</button>
+  </div>
+</div></div>
+
+<!-- CONTRACT MODAL -->
+<div class="modal-bg" id="contractModal"><div class="modal">
+  <h3>Add Contract</h3>
+  <div class="modal-grid">
+    <div class="fld full"><label>Job</label><select id="mConJob"></select></div>
+    <div class="fld"><label>Contract # *</label><input id="mConNum" type="text" placeholder="CON-001"></div>
+    <div class="fld"><label>Date</label><input id="mConDate" type="date"></div>
+    <div class="fld full"><label>Description</label><input id="mConDesc" type="text" placeholder="Contract description…"></div>
+    <div class="fld"><label>Status</label>
+      <select id="mConStatus"><option>Pending</option><option>Signed</option><option>Expired</option><option>Cancelled</option></select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-neutral" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-teal" onclick="saveCon()">Save Contract</button>
+  </div>
+</div></div>
+
+<!-- PHOTO MODAL -->
+<div class="modal-bg" id="photoModal"><div class="modal">
+  <h3>Add Work Photo</h3>
+  <div class="modal-grid">
+    <div class="fld full"><label>Job</label><select id="mPhJob"></select></div>
+    <div class="fld"><label>Type</label>
+      <select id="mPhType"><option>Progress</option><option>Before</option><option>After</option><option>Issue</option><option>Completion</option></select></div>
+    <div class="fld full"><label>Caption</label><input id="mPhCaption" type="text" placeholder="Photo description…"></div>
+    <div class="fld full"><label>Photo (JPG, PNG)</label>
+      <input id="mPhFile" type="file" accept=".jpg,.jpeg,.png" style="border:1px solid #e5e7eb;border-radius:7px;padding:6px;font-size:12px;width:100%;"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-neutral" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-neutral" onclick="savePhoto()">Upload Photo</button>
+  </div>
+</div></div>
+
 </body>
 </html>
 <script>
@@ -2113,12 +2206,19 @@ function renderSubInvs(subId){
     const amt=parseFloat(inv.amount)||0;tot+=amt;
     const d=inv.date?new Date(inv.date+'T00:00:00'):null;
     const tr=document.createElement('tr');
+    const fileCell=inv.file_path
+      ?`<a href="${inv.file_url||'#'}" target="_blank" class="ibtn" style="background:#eff6ff;color:#2563eb;">📎 View</a>
+         <button class="ibtn ibtn-del" onclick="deleteInvFile('${inv.id}')" style="margin-left:2px;" title="Remove file">✕</button>`
+      :`<label class="ibtn" style="background:#f0fdf4;color:#15803d;cursor:pointer;">
+          📎 Upload<input type="file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="uploadInvFile('${inv.id}',this)">
+        </label>`;
     tr.innerHTML=`<td style="font-size:11px;color:#6b7280;">${d?fmtDL(d):'—'}</td>
       <td style="font-weight:600;">${inv.invoice_number||'—'}</td>
       <td style="color:#6b7280;">${job?job.job_name:'—'}</td>
       <td>${inv.description||'—'}</td>
       <td style="font-weight:700;color:#15803d;">$${amt.toFixed(2)}</td>
       <td><span class="badge" style="${inv.status==='Paid'?'background:#dcfce7;color:#15803d;':inv.status==='Approved'?'background:#dbeafe;color:#1d4ed8;':inv.status==='Disputed'?'background:#fee2e2;color:#dc2626;':'background:#fef9c3;color:#92400e;'}">${inv.status}</span></td>
+      <td style="white-space:nowrap;">${fileCell}</td>
       <td><button class="ibtn ibtn-del" onclick="deleteInv('${inv.id}')">✕</button></td>`;
     tbody.appendChild(tr);
   });
@@ -2468,5 +2568,360 @@ async function deleteSubPay(id,subId){
     subsData.payments=subsData.payments.filter(p=>p.id!==id);
     subsRerender();if(subId&&selSubId===subId)renderSubDetail(subId);showToast('✅ Deleted');
   }catch(e){showToast('❌ '+e.message);}
+}
+</script>
+<script>
+/* ════════════════════════════════════════
+   ESTIMATES, CONTRACTS, PHOTOS, CO FILES
+════════════════════════════════════════ */
+
+/* ── LOAD extensions into subsData ── */
+const _origSubsLoadAll = subsLoadAll;
+async function subsLoadAll(){
+  setStatus('Loading subs…','yellow');
+  try{
+    const [s1,s2,s3,s4,s5,s6,s7,s8] = await Promise.all([
+      db.from('subs').select('*').order('name'),
+      db.from('sub_jobs').select('*').order('job_name'),
+      db.from('sub_change_orders').select('*').order('date'),
+      db.from('sub_invoices').select('*').order('date'),
+      db.from('sub_payments').select('*').order('date'),
+      db.from('sub_estimates').select('*').order('date'),
+      db.from('sub_contracts').select('*').order('date'),
+      db.from('sub_photos').select('*').order('created_at'),
+    ]);
+    if(s1.error) throw s1.error;
+    subsData.subs=s1.data||[];
+    subsData.jobs=s2.data||[];
+    subsData.cos=s3.data||[];
+    subsData.invoices=s4.data||[];
+    subsData.payments=s5.data||[];
+    subsData.estimates=s6.data||[];
+    subsData.contracts=s7.data||[];
+    subsData.photos=s8.data||[];
+    subsData._loaded=true;
+    setStatus('✅ Connected','green');
+    subsRerender();
+  }catch(e){
+    setStatus('❌ '+e.message,'red');
+    showToast('Error: '+e.message);
+  }
+}
+
+/* extend renderSubDetail to include new tabs */
+const _origRenderSubDetail = renderSubDetail;
+renderSubDetail = function(subId){
+  _origRenderSubDetail(subId);
+  renderSubEsts(subId);
+  renderSubContracts(subId);
+  renderSubPhotos(subId);
+  renderSubCOsWithFiles(subId);
+};
+
+/* ── FILE UPLOAD HELPER ── */
+async function uploadFile(bucket, path, file){
+  const {error} = await db.storage.from(bucket).upload(path, file, {upsert:true});
+  if(error) throw error;
+  const {data} = db.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}
+function fileBtn(url, bucket, id, deleteFn){
+  if(url) return `<a href="${url}" target="_blank" class="ibtn" style="background:#eff6ff;color:#2563eb;">📎 View</a>
+    <button class="ibtn ibtn-del" onclick="${deleteFn}('${id}')" style="margin-left:2px;" title="Remove">✕</button>`;
+  return `<label class="ibtn" style="background:#f0fdf4;color:#15803d;cursor:pointer;">
+    📎 Upload<input type="file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="uploadFileFor('${bucket}','${id}',this)">
+  </label>`;
+}
+
+async function uploadFileFor(bucket, id, input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>20*1024*1024){showToast('Max 20MB');return;}
+  showToast('⏳ Uploading…');
+  try{
+    const ext=file.name.split('.').pop();
+    const path=`${bucket}/${id}.${ext}`;
+    const url=await uploadFile(bucket,path,file);
+    const table=bucket==='estimates'?'sub_estimates':bucket==='contracts'?'sub_contracts':bucket==='photos'?'sub_photos':'sub_change_orders';
+    await db.from(table).update({file_path:path,file_url:url}).eq('id',id);
+    const arr=bucket==='estimates'?subsData.estimates:bucket==='contracts'?subsData.contracts:bucket==='photos'?subsData.photos:subsData.cos;
+    const item=arr.find(x=>x.id===id);
+    if(item){item.file_path=path;item.file_url=url;}
+    if(selSubId)renderSubDetail(selSubId);
+    showToast('✅ Uploaded');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function removeFile(bucket, id){
+  if(!confirm('Remove this file?'))return;
+  const table=bucket==='estimates'?'sub_estimates':bucket==='contracts'?'sub_contracts':'sub_change_orders';
+  const arr=bucket==='estimates'?subsData.estimates:bucket==='contracts'?subsData.contracts:subsData.cos;
+  const item=arr.find(x=>x.id===id);
+  try{
+    if(item&&item.file_path) await db.storage.from(bucket).remove([item.file_path]);
+    await db.from(table).update({file_path:null,file_url:null}).eq('id',id);
+    if(item){item.file_path=null;item.file_url=null;}
+    if(selSubId)renderSubDetail(selSubId);
+    showToast('✅ File removed');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+/* ── CHANGE ORDERS WITH FILES ── */
+function renderSubCOsWithFiles(subId){
+  const cos=subsData.cos.filter(c=>c.sub_id===subId),tbody=document.getElementById('subCOsBody');
+  if(!tbody)return;
+  tbody.innerHTML='';
+  if(!cos.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">No change orders yet.</td></tr>';return;}
+  let tot=0;
+  cos.forEach(co=>{
+    const job=subsData.jobs.find(j=>j.id===co.sub_job_id);
+    const amt=parseFloat(co.amount)||0;if(co.status==='Approved')tot+=amt;
+    const d=co.date?new Date(co.date+'T00:00:00'):null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:11px;color:#6b7280;">${d?fmtDL(d):'—'}</td>
+      <td style="color:#6b7280;">${job?job.job_name:'—'}</td>
+      <td>${co.description}</td>
+      <td style="font-weight:700;color:#d97706;">$${amt.toFixed(2)}</td>
+      <td><span class="badge" style="${co.status==='Approved'?'background:#dcfce7;color:#15803d;':co.status==='Rejected'?'background:#fee2e2;color:#dc2626;':'background:#fef9c3;color:#92400e;'}">${co.status}</span></td>
+      <td style="white-space:nowrap;">${fileBtn(co.file_url,'changeorders',co.id,"removeCOFile")}</td>
+      <td style="white-space:nowrap;">
+        <button class="ibtn ibtn-edit" onclick="toggleCOStatus('${co.id}')">↻</button>
+        <button class="ibtn ibtn-del" onclick="deleteCO('${co.id}')" style="margin-left:2px;">✕</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  const totEl=document.getElementById('subCOTot');
+  if(totEl)totEl.textContent='$'+tot.toFixed(2);
+}
+
+async function removeCOFile(id){
+  const co=subsData.cos.find(c=>c.id===id);
+  try{
+    if(co&&co.file_path) await db.storage.from('changeorders').remove([co.file_path]);
+    await db.from('sub_change_orders').update({file_path:null,file_url:null}).eq('id',id);
+    if(co){co.file_path=null;co.file_url=null;}
+    if(selSubId)renderSubDetail(selSubId);
+    showToast('✅ File removed');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+/* ── ESTIMATES ── */
+function renderSubEsts(subId){
+  const ests=(subsData.estimates||[]).filter(e=>e.sub_id===subId);
+  const tbody=document.getElementById('subEstsBody');if(!tbody)return;
+  tbody.innerHTML='';
+  if(!ests.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px;">No estimates yet.</td></tr>';return;}
+  let tot=0;
+  ests.forEach(e=>{
+    const job=subsData.jobs.find(j=>j.id===e.sub_job_id);
+    const amt=parseFloat(e.amount)||0;tot+=amt;
+    const d=e.date?new Date(e.date+'T00:00:00'):null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:11px;color:#6b7280;">${d?fmtDL(d):'—'}</td>
+      <td style="font-weight:600;">${e.estimate_number||'—'}</td>
+      <td style="color:#6b7280;">${job?job.job_name:'—'}</td>
+      <td>${e.description||'—'}</td>
+      <td style="font-weight:700;color:#7c3aed;">$${amt.toFixed(2)}</td>
+      <td><span class="badge" style="${e.status==='Approved'?'background:#dcfce7;color:#15803d;':e.status==='Rejected'?'background:#fee2e2;color:#dc2626;':e.status==='Revised'?'background:#dbeafe;color:#1d4ed8;':'background:#fef9c3;color:#92400e;'}">${e.status}</span></td>
+      <td style="white-space:nowrap;">${fileBtn(e.file_url,'estimates',e.id,"removeEstFile")}</td>
+      <td><button class="ibtn ibtn-del" onclick="deleteEst('${e.id}')">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+  const totEl=document.getElementById('subEstTot');if(totEl)totEl.textContent='$'+tot.toFixed(2);
+}
+
+function openEstModal(){
+  if(!selSubId){alert('Select a sub first.');return;}
+  const jobs=getSubJobs(selSubId);
+  document.getElementById('mEstJob').innerHTML='<option value="">— Not job-specific —</option>'+jobs.map(j=>`<option value="${j.id}">${j.job_name}</option>`).join('');
+  ['mEstNum','mEstAmt','mEstDesc'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('mEstDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('mEstStatus').value='Pending';
+  document.getElementById('estModal').classList.add('open');
+}
+
+async function saveEst(){
+  const num=document.getElementById('mEstNum').value.trim();
+  if(!num){alert('Estimate number required.');return;}
+  subsPushUndo();
+  const data={
+    sub_id:selSubId,
+    sub_job_id:document.getElementById('mEstJob').value||null,
+    estimate_number:num,
+    date:document.getElementById('mEstDate').value||null,
+    amount:parseFloat(document.getElementById('mEstAmt').value)||0,
+    description:document.getElementById('mEstDesc').value.trim(),
+    status:document.getElementById('mEstStatus').value
+  };
+  try{
+    const{data:row,error}=await db.from('sub_estimates').insert(data).select().single();
+    if(error)throw error;
+    if(!subsData.estimates)subsData.estimates=[];
+    subsData.estimates.push(row);
+    closeModals();subsRerender();renderSubDetail(selSubId);showToast('✅ Estimate saved');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function deleteEst(id){
+  if(!confirm('Delete this estimate?'))return;
+  subsPushUndo();
+  try{
+    const e=subsData.estimates.find(x=>x.id===id);
+    if(e&&e.file_path)await db.storage.from('estimates').remove([e.file_path]);
+    await db.from('sub_estimates').delete().eq('id',id);
+    subsData.estimates=subsData.estimates.filter(x=>x.id!==id);
+    subsRerender();if(selSubId)renderSubDetail(selSubId);showToast('✅ Deleted');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function removeEstFile(id){await removeFile('estimates',id);}
+
+/* ── CONTRACTS ── */
+function renderSubContracts(subId){
+  const cons=(subsData.contracts||[]).filter(c=>c.sub_id===subId);
+  const tbody=document.getElementById('subContractsBody');if(!tbody)return;
+  tbody.innerHTML='';
+  if(!cons.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">No contracts yet.</td></tr>';return;}
+  cons.forEach(c=>{
+    const job=subsData.jobs.find(j=>j.id===c.sub_job_id);
+    const d=c.date?new Date(c.date+'T00:00:00'):null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:11px;color:#6b7280;">${d?fmtDL(d):'—'}</td>
+      <td style="font-weight:600;">${c.contract_number||'—'}</td>
+      <td style="color:#6b7280;">${job?job.job_name:'General'}</td>
+      <td>${c.description||'—'}</td>
+      <td><span class="badge" style="${c.status==='Signed'?'background:#dcfce7;color:#15803d;':c.status==='Expired'?'background:#fee2e2;color:#dc2626;':c.status==='Cancelled'?'background:#f3f4f6;color:#6b7280;':'background:#fef9c3;color:#92400e;'}">${c.status}</span></td>
+      <td style="white-space:nowrap;">${fileBtn(c.file_url,'contracts',c.id,"removeConFile")}</td>
+      <td><button class="ibtn ibtn-del" onclick="deleteCon('${c.id}')">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function openContractModal(){
+  if(!selSubId){alert('Select a sub first.');return;}
+  const jobs=getSubJobs(selSubId);
+  document.getElementById('mConJob').innerHTML='<option value="">— Not job-specific —</option>'+jobs.map(j=>`<option value="${j.id}">${j.job_name}</option>`).join('');
+  ['mConNum','mConDesc'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('mConDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('mConStatus').value='Pending';
+  document.getElementById('contractModal').classList.add('open');
+}
+
+async function saveCon(){
+  const num=document.getElementById('mConNum').value.trim();
+  if(!num){alert('Contract number required.');return;}
+  subsPushUndo();
+  const data={
+    sub_id:selSubId,
+    sub_job_id:document.getElementById('mConJob').value||null,
+    contract_number:num,
+    date:document.getElementById('mConDate').value||null,
+    description:document.getElementById('mConDesc').value.trim(),
+    status:document.getElementById('mConStatus').value
+  };
+  try{
+    const{data:row,error}=await db.from('sub_contracts').insert(data).select().single();
+    if(error)throw error;
+    if(!subsData.contracts)subsData.contracts=[];
+    subsData.contracts.push(row);
+    closeModals();subsRerender();renderSubDetail(selSubId);showToast('✅ Contract saved');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function deleteCon(id){
+  if(!confirm('Delete this contract?'))return;
+  subsPushUndo();
+  try{
+    const c=subsData.contracts.find(x=>x.id===id);
+    if(c&&c.file_path)await db.storage.from('contracts').remove([c.file_path]);
+    await db.from('sub_contracts').delete().eq('id',id);
+    subsData.contracts=subsData.contracts.filter(x=>x.id!==id);
+    subsRerender();if(selSubId)renderSubDetail(selSubId);showToast('✅ Deleted');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function removeConFile(id){await removeFile('contracts',id);}
+
+/* ── PHOTOS ── */
+function renderSubPhotos(subId){
+  const photos=(subsData.photos||[]).filter(p=>p.sub_id===subId);
+  const grid=document.getElementById('photosGrid');if(!grid)return;
+  if(!photos.length){grid.innerHTML='<div style="text-align:center;color:#9ca3af;padding:30px;grid-column:1/-1;">No photos yet. Click + Add Photo.</div>';return;}
+  grid.innerHTML=photos.map(p=>{
+    const job=subsData.jobs.find(j=>j.id===p.sub_job_id);
+    return`<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
+      ${p.file_url
+        ?`<img src="${p.file_url}" style="width:100%;height:140px;object-fit:cover;" loading="lazy">`
+        :`<div style="height:140px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;">No image</div>`
+      }
+      <div style="padding:8px 10px;">
+        <div style="font-size:11px;font-weight:700;color:#374151;">${p.photo_type||'Progress'}</div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${p.caption||'—'}</div>
+        <div style="font-size:10px;color:#9ca3af;">${job?job.job_name:''}</div>
+        <div style="display:flex;gap:4px;margin-top:6px;">
+          ${p.file_url?`<a href="${p.file_url}" target="_blank" class="ibtn" style="background:#eff6ff;color:#2563eb;font-size:10px;">🔍 View</a>`:''}
+          <button class="ibtn ibtn-del" style="font-size:10px;" onclick="deletePhoto('${p.id}')">✕</button>
+        </div>
+      </div></div>`;
+  }).join('');
+}
+
+function openPhotoModal(){
+  if(!selSubId){alert('Select a sub first.');return;}
+  const jobs=getSubJobs(selSubId);
+  document.getElementById('mPhJob').innerHTML='<option value="">— Not job-specific —</option>'+jobs.map(j=>`<option value="${j.id}">${j.job_name}</option>`).join('');
+  document.getElementById('mPhCaption').value='';
+  document.getElementById('mPhType').value='Progress';
+  document.getElementById('mPhFile').value='';
+  document.getElementById('photoModal').classList.add('open');
+}
+
+async function savePhoto(){
+  const file=document.getElementById('mPhFile').files[0];
+  if(!file){alert('Please select a photo.');return;}
+  if(file.size>20*1024*1024){showToast('Max 20MB');return;}
+  subsPushUndo();
+  const data={
+    sub_id:selSubId,
+    sub_job_id:document.getElementById('mPhJob').value||null,
+    caption:document.getElementById('mPhCaption').value.trim(),
+    photo_type:document.getElementById('mPhType').value
+  };
+  try{
+    const{data:row,error}=await db.from('sub_photos').insert(data).select().single();
+    if(error)throw error;
+    const ext=file.name.split('.').pop();
+    const path=`photos/${row.id}.${ext}`;
+    const url=await uploadFile('photos',path,file);
+    await db.from('sub_photos').update({file_path:path,file_url:url}).eq('id',row.id);
+    row.file_path=path;row.file_url=url;
+    if(!subsData.photos)subsData.photos=[];
+    subsData.photos.push(row);
+    closeModals();renderSubPhotos(selSubId);showToast('✅ Photo uploaded');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function deletePhoto(id){
+  if(!confirm('Delete this photo?'))return;
+  subsPushUndo();
+  try{
+    const p=subsData.photos.find(x=>x.id===id);
+    if(p&&p.file_path)await db.storage.from('photos').remove([p.file_path]);
+    await db.from('sub_photos').delete().eq('id',id);
+    subsData.photos=subsData.photos.filter(x=>x.id!==id);
+    renderSubPhotos(selSubId);showToast('✅ Deleted');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+/* ── UPDATE DASHBOARD TO SHOW SUB BALANCES ── */
+const _origLoadDash = loadDash;
+async function loadDash(){
+  await _origLoadDash();
+  try{
+    if(!subsData._loaded) return;
+    let subDue=0;
+    subsData.subs.forEach(s=>{const t=calcSubTotals(s);subDue+=t.owed;});
+    const el=document.getElementById('dashSubDue');
+    if(el) el.textContent='$'+Math.round(subDue).toLocaleString();
+  }catch(e){}
 }
 </script>
