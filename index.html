@@ -252,7 +252,7 @@ td.cb-col,th.cb-col{text-align:center!important;padding-left:4px!important;font-
     <button class="s-btn on" id="snav-dash" onclick="goTo('dash',this)"><span class="s-ico">🏠</span>Dashboard</button>
     <div class="s-section">Modules</div>
     <button class="s-btn" id="snav-ts" onclick="goTo('ts',this)"><span class="s-ico">🕐</span>Timesheet</button>
-    <button class="s-btn" id="snav-subs" onclick="goTo('subs',this)"><span class="s-ico">👷</span>Subcontractors<span class="s-pill">Soon</span></button>
+    <button class="s-btn" id="snav-subs" onclick="goTo('subs',this)"><span class="s-ico">👷</span>Subcontractors</button>
     <button class="s-btn" id="snav-jobs" onclick="goTo('jobs',this)"><span class="s-ico">🏗</span>Jobs &amp; Progress<span class="s-pill">Soon</span></button>
     <button class="s-btn" id="snav-purch" onclick="goTo('purch',this)"><span class="s-ico">🛒</span>Purchases<span class="s-pill">Soon</span></button>
   </div>
@@ -596,7 +596,159 @@ td.cb-col,th.cb-col{text-align:center!important;padding-left:4px!important;font-
 </div><!-- /pg-ts -->
 
 <!-- ══ COMING SOON PAGES ══ -->
-<div class="page" id="pg-subs"><div class="cs-wrap"><div class="cs-box"><div class="cs-ico">👷</div><div class="cs-h">Subcontractors</div><div class="cs-p">Full subcontractor management coming next.</div><ul class="cs-ul"><li>Sub profiles with license &amp; insurance</li><li>Contract management</li><li>Payment history per sub</li><li>Assign subs to jobs</li></ul><button class="cs-btn" onclick="alert('Come back to Claude to build this!')">Build This Next →</button></div></div></div>
+<div class="page" id="pg-subs">
+
+<!-- SUBS TOP BAR -->
+<div class="ts-wrap" style="padding:14px 16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="openSubModal()">+ Add Subcontractor</button>
+      <button id="subsUndoBtn" class="btn btn-neutral" onclick="subsUndo()" disabled style="opacity:.4;">↩ Undo</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="fld"><label>View</label>
+        <select id="subViewSel" onchange="subsSetView(this.value)" style="width:160px;">
+          <option value="roster">All Subcontractors</option>
+          <option value="jobs">Jobs Overview</option>
+          <option value="payments">Payments</option>
+        </select>
+      </div>
+      <div class="fld"><label>Filter Sub</label>
+        <select id="subFilterSel" onchange="subsRerender()" style="width:180px;">
+          <option value="">— All Subs —</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBS KPI CARDS -->
+<div class="mini-cards mc4" id="subsKpiRow" style="margin-bottom:14px;">
+  <div class="mcard"><div class="v vc-purple" id="skTotal">$0</div><div class="l">Total Contracted</div></div>
+  <div class="mcard"><div class="v vc-green" id="skPaid">$0</div><div class="l">Total Paid</div></div>
+  <div class="mcard"><div class="v vc-pink" id="skOwed">$0</div><div class="l">Total Owed</div></div>
+  <div class="mcard"><div class="v vc-orange" id="skCOs">$0</div><div class="l">Change Orders</div></div>
+</div>
+
+<!-- SUBS VIEWS -->
+<div id="subView-roster">
+  <div class="roster-grid" id="subsGrid"></div>
+</div>
+
+<div id="subView-jobs" style="display:none;">
+  <div class="tw"><table><thead><tr>
+    <th>Subcontractor</th><th>Job</th><th>Status</th><th>Contract</th><th>Change Orders</th><th>Total</th><th>Invoiced</th><th>Paid</th><th>Retention</th><th>Balance Due</th><th>Actions</th>
+  </tr></thead><tbody id="subsJobsBody"></tbody></table></div>
+</div>
+
+<div id="subView-payments" style="display:none;">
+  <div class="tw"><table><thead><tr>
+    <th>Date</th><th>Subcontractor</th><th>Job</th><th>Amount</th><th>Method</th><th>Reference #</th><th>Note</th><th>Actions</th>
+  </tr></thead><tbody id="subsPayBody"></tbody>
+  <tfoot><tr>
+    <td colspan="3" style="text-align:right;padding-right:10px;font-weight:700;">Total Paid</td>
+    <td id="subsPayTot" style="font-weight:800;color:#15803d;">$0.00</td>
+    <td colspan="4"></td>
+  </tr></tfoot></table></div>
+</div>
+
+<!-- SUB DETAIL (shown when a sub is selected) -->
+<div id="subDetail" style="display:none;">
+  <div class="ts-wrap" style="margin-top:14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <div>
+        <div style="font-size:17px;font-weight:800;" id="subDetailName">—</div>
+        <div style="font-size:12px;color:#9ca3af;" id="subDetailMeta">—</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-neutral" onclick="openSubModal(window._selSubId)">✎ Edit Info</button>
+        <button class="btn btn-primary" onclick="openSubJobModal()">+ Add Job</button>
+        <button class="btn btn-neutral" style="font-size:12px;" onclick="subDetailClose()">✕ Close</button>
+      </div>
+    </div>
+
+    <!-- SUB INFO CARDS -->
+    <div class="mini-cards mc4" style="margin-bottom:16px;">
+      <div class="mcard"><div class="v vc-purple" id="sdContracted">$0</div><div class="l">Total Contracted</div></div>
+      <div class="mcard"><div class="v vc-orange" id="sdCOs">$0</div><div class="l">Change Orders</div></div>
+      <div class="mcard"><div class="v vc-green" id="sdPaid">$0</div><div class="l">Total Paid</div></div>
+      <div class="mcard"><div class="v vc-pink" id="sdOwed">$0</div><div class="l">Balance Owed</div></div>
+    </div>
+
+    <!-- SUB TABS -->
+    <div class="tabs">
+      <button class="tab on" id="stab-jobs" onclick="subTab('jobs',this)" style="--tc:#0f2027;">📋 Jobs</button>
+      <button class="tab" id="stab-cos" onclick="subTab('cos',this)" style="--tc:#d97706;">🔄 Change Orders</button>
+      <button class="tab" id="stab-invoices" onclick="subTab('invoices',this)" style="--tc:#15803d;">🧾 Invoices</button>
+      <button class="tab" id="stab-pays" onclick="subTab('pays',this)" style="--tc:#db2777;">💰 Payments</button>
+      <button class="tab" id="stab-info" onclick="subTab('info',this)" style="--tc:#0f766e;">ℹ️ Info</button>
+    </div>
+
+    <!-- JOBS TAB -->
+    <div class="panel on" id="sp-jobs"><div class="panel-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-title">Jobs</div>
+        <button class="btn btn-primary" onclick="openSubJobModal()">+ Add Job</button>
+      </div>
+      <div class="tw"><table><thead><tr>
+        <th>Job Name</th><th>Status</th><th>Start</th><th>End</th><th>Contract</th><th>COs</th><th>Total</th><th>Paid</th><th>Retention</th><th>Owed</th><th>Actions</th>
+      </tr></thead><tbody id="subJobsBody"></tbody></table></div>
+    </div></div>
+
+    <!-- CHANGE ORDERS TAB -->
+    <div class="panel" id="sp-cos"><div class="panel-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-title">Change Orders</div>
+        <button class="btn btn-gold" onclick="openCOModal()">+ Add Change Order</button>
+      </div>
+      <div class="tw"><table><thead><tr>
+        <th>Date</th><th>Job</th><th>Description</th><th>Amount</th><th>Status</th><th>Actions</th>
+      </tr></thead><tbody id="subCOsBody"></tbody>
+      <tfoot><tr>
+        <td colspan="3" style="text-align:right;padding-right:10px;font-weight:700;">Total COs</td>
+        <td id="subCOTot" style="font-weight:800;color:#d97706;">$0.00</td><td colspan="2"></td>
+      </tr></tfoot></table></div>
+    </div></div>
+
+    <!-- INVOICES TAB -->
+    <div class="panel" id="sp-invoices"><div class="panel-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-title">Invoices</div>
+        <button class="btn btn-success" onclick="openInvModal()">+ Add Invoice</button>
+      </div>
+      <div class="tw th-green"><table><thead><tr>
+        <th>Date</th><th>Invoice #</th><th>Job</th><th>Description</th><th>Amount</th><th>Status</th><th>Actions</th>
+      </tr></thead><tbody id="subInvsBody"></tbody>
+      <tfoot><tr>
+        <td colspan="4" style="text-align:right;padding-right:10px;font-weight:700;">Total Invoiced</td>
+        <td id="subInvTot" style="font-weight:800;color:#15803d;">$0.00</td><td colspan="2"></td>
+      </tr></tfoot></table></div>
+    </div></div>
+
+    <!-- PAYMENTS TAB -->
+    <div class="panel" id="sp-pays"><div class="panel-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-title">Payments</div>
+        <button class="btn btn-gold" onclick="openSubPayModal()">+ Record Payment</button>
+      </div>
+      <div class="tw th-gold"><table><thead><tr>
+        <th>Date</th><th>Job</th><th>Amount</th><th>Method</th><th>Reference #</th><th>Note</th><th>Actions</th>
+      </tr></thead><tbody id="subPaysBody"></tbody>
+      <tfoot><tr>
+        <td colspan="2" style="text-align:right;padding-right:10px;font-weight:700;">Total Paid</td>
+        <td id="subPayTot" style="font-weight:800;color:#15803d;">$0.00</td><td colspan="4"></td>
+      </tr></tfoot></table></div>
+    </div></div>
+
+    <!-- INFO TAB -->
+    <div class="panel" id="sp-info"><div class="panel-body">
+      <div id="subInfoContent"></div>
+    </div></div>
+
+  </div>
+</div>
+
+</div><!-- /pg-subs -->
 <div class="page" id="pg-jobs"><div class="cs-wrap"><div class="cs-box"><div class="cs-ico">🏗</div><div class="cs-h">Jobs &amp; Progress</div><div class="cs-p">Track every job from start to finish.</div><ul class="cs-ul"><li>Create jobs with address &amp; scope</li><li>Assign employees and subs</li><li>Track milestones &amp; completion</li><li>Link timesheets to each job</li></ul><button class="cs-btn" onclick="alert('Come back to Claude to build this!')">Build This Next →</button></div></div></div>
 <div class="page" id="pg-purch"><div class="cs-wrap"><div class="cs-box"><div class="cs-ico">🛒</div><div class="cs-h">Purchases &amp; Materials</div><div class="cs-p">Track every purchase across all jobs.</div><ul class="cs-ul"><li>Log purchases with vendor &amp; job</li><li>Track approval status</li><li>Vendor directory</li><li>Monthly spending reports</li></ul><button class="cs-btn" onclick="alert('Come back to Claude to build this!')">Build This Next →</button></div></div></div>
 
@@ -661,7 +813,7 @@ const EICONS={'Travel':'✈️','Meals':'🍽️','Accommodation':'🏨','Office
 const HUB_INFO={
   dash:{title:'Dashboard',sub:'Welcome to Caraveli Inc'},
   ts:{title:'Timesheet & Expenses',sub:'Hours, expenses & payments'},
-  subs:{title:'Subcontractors',sub:'Coming soon'},
+  subs:{title:'Subcontractors',sub:'Manage subs, jobs, change orders & payments'},
   jobs:{title:'Jobs & Progress',sub:'Coming soon'},
   purch:{title:'Purchases',sub:'Coming soon'},
 };
@@ -676,6 +828,7 @@ function goTo(id,el){
   closeSidebar();
   if(id==='dash') loadDash();
   if(id==='ts'){ if(!weekData._loaded) tsLoadAll(); else tsRerender(); }
+  if(id==='subs'){ if(!subsData._loaded) subsLoadAll(); else subsRerender(); }
   if(id==='ts'&&!weekData._loaded){tsLoadAll();}
 }
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');}
@@ -1554,5 +1707,766 @@ function initApp(){
 }
 initApp();
 </script>
+
+<!-- SUB MODAL -->
+<div class="modal-bg" id="subModal"><div class="modal" style="width:560px;">
+  <h3 id="subModalTitle">Add Subcontractor</h3>
+  <div class="modal-grid">
+    <div class="fld full"><label>Full Name *</label><input id="mSName" type="text" placeholder="John Smith"></div>
+    <div class="fld"><label>Company</label><input id="mSCo" type="text" placeholder="Smith Plumbing LLC"></div>
+    <div class="fld"><label>Trade / Specialty</label><input id="mSTrade" type="text" placeholder="Plumbing"></div>
+    <div class="fld"><label>Email</label><input id="mSEmail" type="email" placeholder="john@smith.com"></div>
+    <div class="fld"><label>Phone</label><input id="mSPhone" type="tel" placeholder="555-000-0000"></div>
+    <div class="fld"><label>Emergency Contact</label><input id="mSECon" type="text" placeholder="Jane Smith"></div>
+    <div class="fld"><label>Emergency Phone</label><input id="mSEPhone" type="tel" placeholder="555-000-0001"></div>
+    <div class="fld"><label>License #</label><input id="mSLic" type="text" placeholder="LIC-12345"></div>
+    <div class="fld"><label>License Expiry</label><input id="mSLicExp" type="date"></div>
+    <div class="fld"><label>Insurance #</label><input id="mSIns" type="text" placeholder="INS-67890"></div>
+    <div class="fld"><label>Insurance Expiry</label><input id="mSInsExp" type="date"></div>
+    <div class="fld"><label>Payment Method</label>
+      <select id="mSPayMethod"><option>Check</option><option>ACH / Wire</option><option>Cash</option><option>Zelle</option><option>Venmo</option><option>PayPal</option><option>Other</option></select></div>
+    <div class="fld"><label>Payment Terms</label>
+      <select id="mSPayTerms"><option>Net 30</option><option>Net 15</option><option>Net 45</option><option>Due on Receipt</option><option>Other</option></select></div>
+    <div class="fld"><label>Contract Status</label>
+      <select id="mSStatus"><option>Active</option><option>Inactive</option><option>Pending</option><option>Completed</option></select></div>
+    <div class="fld"><label>Rating (1-5)</label><input id="mSRating" type="number" min="1" max="5" value="5" style="width:70px;"></div>
+    <div class="fld full"><label>Notes</label><input id="mSNotes" type="text" placeholder="Any notes…"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-neutral" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveSub()">Save Subcontractor</button>
+  </div>
+</div></div>
+
+<!-- SUB JOB MODAL -->
+<div class="modal-bg" id="subJobModal"><div class="modal">
+  <h3>Add Job</h3>
+  <div class="modal-grid">
+    <div class="fld full"><label>Job Name *</label><input id="mJName" type="text" placeholder="Kitchen Remodel"></div>
+    <div class="fld full"><label>Description</label><input id="mJDesc" type="text" placeholder="Scope of work…"></div>
+    <div class="fld"><label>Start Date</label><input id="mJStart" type="date"></div>
+    <div class="fld"><label>End Date</label><input id="mJEnd" type="date"></div>
+    <div class="fld"><label>Contract Amount ($)</label><input id="mJAmt" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="fld"><label>Retention %</label><input id="mJRet" type="number" min="0" max="100" step="0.1" value="0" placeholder="0"></div>
+    <div class="fld"><label>Status</label>
+      <select id="mJStatus"><option>Active</option><option>Pending</option><option>Completed</option><option>On Hold</option><option>Cancelled</option></select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-neutral" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveSubJob()">Save Job</button>
+  </div>
+</div></div>
+
+<!-- CHANGE ORDER MODAL -->
+<div class="modal-bg" id="coModal2"><div class="modal">
+  <h3>Add Change Order</h3>
+  <div class="modal-grid">
+    <div class="fld full"><label>Job *</label><select id="mCOJob"></select></div>
+    <div class="fld full"><label>Description *</label><input id="mCODesc" type="text" placeholder="Additional work description…"></div>
+    <div class="fld"><label>Amount ($)</label><input id="mCOAmt" type="number" step="0.01" placeholder="0.00"></div>
+    <div class="fld"><label>Date</label><input id="mCODate" type="date"></div>
+    <div class="fld"><label>Status</label>
+      <select id="mCOStatus"><option>Pending</option><option>Approved</option><option>Rejected</option></select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-neutral" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-gold" onclick="saveCO()">Save Change Order</button>
+  </div>
+</div></div>
+
+<!-- INVOICE MODAL -->
+<div class="modal-bg" id="invModal"><div class="modal">
+  <h3>Add Invoice</h3>
+  <div class="modal-grid">
+    <div class="fld full"><label>Job *</label><select id="mIJob"></select></div>
+    <div class="fld"><label>Invoice # *</label><input id="mINum" type="text" placeholder="INV-001"></div>
+    <div class="fld"><label>Date</label><input id="mIDate" type="date"></div>
+    <div class="fld"><label>Amount ($) *</label><input id="mIAmt" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="fld full"><label>Description</label><input id="mIDesc" type="text" placeholder="Invoice description…"></div>
+    <div class="fld"><label>Status</label>
+      <select id="mIStatus"><option>Pending</option><option>Approved</option><option>Paid</option><option>Disputed</option></select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-neutral" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-success" onclick="saveInv()">Save Invoice</button>
+  </div>
+</div></div>
+
+<!-- SUB PAYMENT MODAL -->
+<div class="modal-bg" id="subPayModal"><div class="modal">
+  <h3>Record Payment</h3>
+  <div class="modal-grid">
+    <div class="fld full"><label>Job</label><select id="mSPJob"><option value="">— General / Not job-specific —</option></select></div>
+    <div class="fld"><label>Date *</label><input id="mSPDate" type="date"></div>
+    <div class="fld"><label>Amount ($) *</label><input id="mSPAmt" type="number" min="0.01" step="0.01" placeholder="0.00"></div>
+    <div class="fld"><label>Method</label>
+      <select id="mSPMethod"><option>Check</option><option>ACH / Wire</option><option>Cash</option><option>Zelle</option><option>Venmo</option><option>PayPal</option><option>Other</option></select></div>
+    <div class="fld"><label>Reference #</label><input id="mSPRef" type="text" placeholder="CHK-1001"></div>
+    <div class="fld full"><label>Note</label><input id="mSPNote" type="text" placeholder="Optional note…"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-neutral" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-gold" onclick="saveSubPay()">Record Payment</button>
+  </div>
+</div></div>
+
 </body>
 </html>
+<script>
+/* ════════════════════════════════════════
+   SUBCONTRACTORS MODULE
+════════════════════════════════════════ */
+let subsData = {
+  _loaded: false,
+  subs: [],
+  jobs: [],
+  cos: [],
+  invoices: [],
+  payments: []
+};
+let selSubId = null;
+let editSubId = null;
+let editSubJobId = null;
+let subsUndoStack = [];
+
+async function subsLoadAll(){
+  setStatus('Loading subs…','yellow');
+  try{
+    const [s1,s2,s3,s4,s5] = await Promise.all([
+      db.from('subs').select('*').order('name'),
+      db.from('sub_jobs').select('*').order('job_name'),
+      db.from('sub_change_orders').select('*').order('date'),
+      db.from('sub_invoices').select('*').order('date'),
+      db.from('sub_payments').select('*').order('date'),
+    ]);
+    if(s1.error) throw s1.error;
+    subsData.subs = s1.data||[];
+    subsData.jobs = s2.data||[];
+    subsData.cos  = s3.data||[];
+    subsData.invoices = s4.data||[];
+    subsData.payments = s5.data||[];
+    subsData._loaded = true;
+    setStatus('✅ Connected','green');
+    subsRerender();
+  }catch(e){
+    setStatus('❌ '+e.message,'red');
+    showToast('Error loading subs: '+e.message);
+  }
+}
+
+function subsPushUndo(){
+  subsUndoStack.push(JSON.stringify(subsData));
+  if(subsUndoStack.length>20) subsUndoStack.shift();
+  const btn=document.getElementById('subsUndoBtn');
+  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='↩ Undo ('+subsUndoStack.length+')';}
+}
+function subsUndo(){
+  if(!subsUndoStack.length){showToast('Nothing to undo');return;}
+  if(!confirm('Undo last action?'))return;
+  const s=JSON.parse(subsUndoStack.pop());
+  subsData.subs=s.subs;subsData.jobs=s.jobs;subsData.cos=s.cos;subsData.invoices=s.invoices;subsData.payments=s.payments;
+  subsRerender();
+  const btn=document.getElementById('subsUndoBtn');
+  if(btn){btn.disabled=subsUndoStack.length===0;btn.style.opacity=subsUndoStack.length===0?'0.4':'1';btn.textContent='↩ Undo'+(subsUndoStack.length?' ('+subsUndoStack.length+')':'');}
+  showToast('↩ Undone');
+}
+
+/* ── HELPERS ── */
+function getSubJobs(subId){ return subsData.jobs.filter(j=>j.sub_id===subId); }
+function getJobCOs(jobId){ return subsData.cos.filter(c=>c.sub_job_id===jobId); }
+function getJobInvs(jobId){ return subsData.invoices.filter(i=>i.sub_job_id===jobId); }
+function getSubPays(subId){ return subsData.payments.filter(p=>p.sub_id===subId); }
+function getJobPays(jobId){ return subsData.payments.filter(p=>p.sub_job_id===jobId); }
+
+function calcJobTotals(job){
+  const cos=getJobCOs(job.id);
+  const coAmt=cos.filter(c=>c.status==='Approved').reduce((s,c)=>s+(parseFloat(c.amount)||0),0);
+  const contract=parseFloat(job.contract_amount)||0;
+  const total=contract+coAmt;
+  const invoiced=getJobInvs(job.id).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+  const paid=getJobPays(job.id).reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+  const retention=total*(parseFloat(job.retention_pct)||0)/100;
+  const owed=Math.max(0,total-paid);
+  const netDue=Math.max(0,owed-retention);
+  return{contract,coAmt,total,invoiced,paid,retention,owed,netDue};
+}
+function calcSubTotals(sub){
+  const jobs=getSubJobs(sub.id);
+  let contract=0,coAmt=0,total=0,paid=0,owed=0;
+  jobs.forEach(j=>{
+    const t=calcJobTotals(j);
+    contract+=t.contract;coAmt+=t.coAmt;total+=t.total;paid+=t.paid;owed+=t.owed;
+  });
+  return{contract,coAmt,total,paid,owed};
+}
+
+/* ── VIEWS ── */
+function subsSetView(v){
+  ['roster','jobs','payments'].forEach(x=>document.getElementById('subView-'+x).style.display=x===v?'block':'none');
+  if(v==='jobs') renderSubsJobsView();
+  if(v==='payments') renderSubsPayView();
+}
+
+function subsRerender(){
+  subsUpdateKpis();
+  renderSubsRoster();
+  subsPopulateFilter();
+  const v=document.getElementById('subViewSel').value;
+  subsSetView(v);
+  if(selSubId) renderSubDetail(selSubId);
+}
+
+function subsUpdateKpis(){
+  let total=0,paid=0,owed=0,cos=0;
+  subsData.subs.forEach(s=>{
+    const t=calcSubTotals(s);
+    total+=t.total;paid+=t.paid;owed+=t.owed;cos+=t.coAmt;
+  });
+  document.getElementById('skTotal').textContent='$'+Math.round(total).toLocaleString();
+  document.getElementById('skPaid').textContent='$'+Math.round(paid).toLocaleString();
+  document.getElementById('skOwed').textContent='$'+Math.round(owed).toLocaleString();
+  document.getElementById('skCOs').textContent='$'+Math.round(cos).toLocaleString();
+}
+
+function subsPopulateFilter(){
+  const sel=document.getElementById('subFilterSel');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— All Subs —</option>'+
+    subsData.subs.map(s=>`<option value="${s.id}"${s.id===cur?' selected':''}>${s.name}</option>`).join('');
+}
+
+function renderSubsRoster(){
+  const g=document.getElementById('subsGrid');
+  const filter=document.getElementById('subFilterSel').value;
+  const subs=filter?subsData.subs.filter(s=>s.id===filter):subsData.subs;
+  if(!subs.length){g.innerHTML='<div style="text-align:center;color:#9ca3af;padding:30px;grid-column:1/-1;">No subcontractors yet. Click + Add Subcontractor to get started.</div>';return;}
+  const now=new Date();
+  g.innerHTML=subs.map(sub=>{
+    const t=calcSubTotals(sub),jobs=getSubJobs(sub.id);
+    const licExp=sub.license_expiry?new Date(sub.license_expiry):null;
+    const insExp=sub.insurance_expiry?new Date(sub.insurance_expiry):null;
+    const licWarn=licExp&&(licExp-now)<30*86400000;
+    const insWarn=insExp&&(insExp-now)<30*86400000;
+    const stars='⭐'.repeat(Math.min(5,Math.max(1,parseInt(sub.rating)||5)));
+    return`<div class="rc${sub.id===selSubId?' sel':''}" onclick="subDetailOpen('${sub.id}')">
+      <div class="rc-av" style="background:${ACOLORS[subsData.subs.indexOf(sub)%ACOLORS.length]}">${initials(sub.name)}</div>
+      <div class="rc-name">${sub.name}</div>
+      <div class="rc-co">${sub.company||sub.trade||'—'}</div>
+      <div class="rc-meta">${sub.trade||''} ${sub.phone?'· '+sub.phone:''}</div>
+      <div class="rc-meta" style="margin-top:5px;">${stars} · ${sub.contract_status||'Active'}</div>
+      ${licWarn?'<div class="rc-meta" style="color:#dc2626;font-weight:700;">⚠️ License expiring soon</div>':''}
+      ${insWarn?'<div class="rc-meta" style="color:#dc2626;font-weight:700;">⚠️ Insurance expiring soon</div>':''}
+      <div class="rc-meta" style="color:#7c3aed;font-weight:700;margin-top:5px;">Contracted: $${t.total.toFixed(2)}</div>
+      <div class="rc-meta" style="color:#15803d;font-weight:700;">Paid: $${t.paid.toFixed(2)}</div>
+      <div class="rc-meta" style="color:#db2777;font-weight:700;">Owed: $${t.owed.toFixed(2)}</div>
+      <div class="rc-meta">${jobs.length} job${jobs.length!==1?'s':''}</div>
+      <div class="rc-actions">
+        <button class="ibtn ibtn-edit" onclick="event.stopPropagation();openSubModal('${sub.id}')">✎ Edit</button>
+        <button class="ibtn ibtn-del" onclick="event.stopPropagation();deleteSub('${sub.id}')">✕</button>
+      </div></div>`;
+  }).join('');
+}
+
+function renderSubsJobsView(){
+  const filter=document.getElementById('subFilterSel').value;
+  const jobs=filter?subsData.jobs.filter(j=>j.sub_id===filter):subsData.jobs;
+  const tbody=document.getElementById('subsJobsBody');tbody.innerHTML='';
+  if(!jobs.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:#9ca3af;padding:20px;">No jobs yet.</td></tr>';return;}
+  jobs.forEach(job=>{
+    const sub=subsData.subs.find(s=>s.id===job.sub_id);
+    const t=calcJobTotals(job);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:600;">${sub?sub.name:'—'}</td>
+      <td>${job.job_name}</td>
+      <td><span class="badge" style="${job.status==='Active'?'background:#dcfce7;color:#15803d;':job.status==='Completed'?'background:#dbeafe;color:#1d4ed8;':'background:#fef9c3;color:#92400e;'}">${job.status}</span></td>
+      <td style="font-weight:600;">$${t.contract.toFixed(2)}</td>
+      <td style="color:#d97706;font-weight:600;">+$${t.coAmt.toFixed(2)}</td>
+      <td style="color:#7c3aed;font-weight:700;">$${t.total.toFixed(2)}</td>
+      <td>$${t.invoiced.toFixed(2)}</td>
+      <td style="color:#15803d;font-weight:700;">$${t.paid.toFixed(2)}</td>
+      <td style="color:#9ca3af;">$${t.retention.toFixed(2)}</td>
+      <td style="color:#db2777;font-weight:800;">$${t.owed.toFixed(2)}</td>
+      <td><button class="ibtn ibtn-edit" onclick="subDetailOpen('${job.sub_id}')">View →</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderSubsPayView(){
+  const filter=document.getElementById('subFilterSel').value;
+  const pays=filter?subsData.payments.filter(p=>p.sub_id===filter):subsData.payments;
+  const tbody=document.getElementById('subsPayBody');tbody.innerHTML='';
+  if(!pays.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px;">No payments yet.</td></tr>';return;}
+  let tot=0;
+  pays.forEach(p=>{
+    tot+=parseFloat(p.amount)||0;
+    const sub=subsData.subs.find(s=>s.id===p.sub_id);
+    const job=subsData.jobs.find(j=>j.id===p.sub_job_id);
+    const d=p.date?new Date(p.date+'T00:00:00'):null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:11px;color:#6b7280;">${d?fmtDL(d):'—'}</td>
+      <td style="font-weight:600;">${sub?sub.name:'—'}</td>
+      <td style="color:#6b7280;">${job?job.job_name:'General'}</td>
+      <td style="font-weight:800;color:#15803d;">$${(parseFloat(p.amount)||0).toFixed(2)}</td>
+      <td>${p.method||'—'}</td>
+      <td style="font-weight:600;">${p.reference||'—'}</td>
+      <td style="color:#6b7280;">${p.note||'—'}</td>
+      <td><button class="ibtn ibtn-del" onclick="deleteSubPay('${p.id}','${p.sub_id}')">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('subsPayTot').textContent='$'+tot.toFixed(2);
+}
+
+/* ── SUB DETAIL ── */
+function subDetailOpen(subId){
+  selSubId=subId;window._selSubId=subId;
+  document.getElementById('subDetail').style.display='block';
+  document.querySelectorAll('#subsGrid .rc').forEach(c=>c.classList.remove('sel'));
+  const card=document.querySelector(`#subsGrid .rc[onclick*="${subId}"]`);
+  if(card)card.classList.add('sel');
+  renderSubDetail(subId);
+  document.getElementById('subDetail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function subDetailClose(){
+  selSubId=null;window._selSubId=null;
+  document.getElementById('subDetail').style.display='none';
+  document.querySelectorAll('#subsGrid .rc').forEach(c=>c.classList.remove('sel'));
+}
+function subTab(id,el){
+  document.querySelectorAll('#subDetail .tab').forEach(t=>t.classList.remove('on'));
+  if(el)el.classList.add('on');
+  document.querySelectorAll('#subDetail .panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('sp-'+id).classList.add('on');
+}
+
+function renderSubDetail(subId){
+  const sub=subsData.subs.find(s=>s.id===subId);if(!sub)return;
+  const t=calcSubTotals(sub);
+  document.getElementById('subDetailName').textContent=sub.name+(sub.company?' — '+sub.company:'');
+  document.getElementById('subDetailMeta').textContent=(sub.trade||'')+(sub.phone?' · '+sub.phone:'')+(sub.email?' · '+sub.email:'');
+  document.getElementById('sdContracted').textContent='$'+t.total.toFixed(2);
+  document.getElementById('sdCOs').textContent='$'+t.coAmt.toFixed(2);
+  document.getElementById('sdPaid').textContent='$'+t.paid.toFixed(2);
+  document.getElementById('sdOwed').textContent='$'+t.owed.toFixed(2);
+  renderSubJobs(subId);
+  renderSubCOs(subId);
+  renderSubInvs(subId);
+  renderSubPays(subId);
+  renderSubInfo(sub);
+}
+
+function renderSubJobs(subId){
+  const jobs=getSubJobs(subId),tbody=document.getElementById('subJobsBody');
+  tbody.innerHTML='';
+  if(!jobs.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:#9ca3af;padding:20px;">No jobs yet. Click + Add Job.</td></tr>';return;}
+  jobs.forEach(job=>{
+    const t=calcJobTotals(job);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:600;">${job.job_name}<br><span style="font-size:10px;color:#9ca3af;">${job.description||''}</span></td>
+      <td><span class="badge" style="${job.status==='Active'?'background:#dcfce7;color:#15803d;':job.status==='Completed'?'background:#dbeafe;color:#1d4ed8;':'background:#fef9c3;color:#92400e;'}">${job.status}</span></td>
+      <td style="font-size:11px;color:#6b7280;">${job.start_date||'—'}</td>
+      <td style="font-size:11px;color:#6b7280;">${job.end_date||'—'}</td>
+      <td style="font-weight:600;">$${t.contract.toFixed(2)}</td>
+      <td style="color:#d97706;font-weight:600;">+$${t.coAmt.toFixed(2)}</td>
+      <td style="color:#7c3aed;font-weight:700;">$${t.total.toFixed(2)}</td>
+      <td style="color:#15803d;font-weight:700;">$${t.paid.toFixed(2)}</td>
+      <td style="color:#9ca3af;font-size:11px;">${job.retention_pct||0}% ($${t.retention.toFixed(2)})</td>
+      <td style="color:#db2777;font-weight:800;">$${t.owed.toFixed(2)}</td>
+      <td style="white-space:nowrap;">
+        <button class="ibtn ibtn-edit" onclick="openSubJobModal('${job.id}')">✎</button>
+        <button class="ibtn ibtn-del" onclick="deleteSubJob('${job.id}')" style="margin-left:3px;">✕</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderSubCOs(subId){
+  const cos=subsData.cos.filter(c=>c.sub_id===subId),tbody=document.getElementById('subCOsBody');
+  tbody.innerHTML='';
+  if(!cos.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px;">No change orders yet.</td></tr>';return;}
+  let tot=0;
+  cos.forEach(co=>{
+    const job=subsData.jobs.find(j=>j.id===co.sub_job_id);
+    const amt=parseFloat(co.amount)||0;tot+=co.status==='Approved'?amt:0;
+    const d=co.date?new Date(co.date+'T00:00:00'):null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:11px;color:#6b7280;">${d?fmtDL(d):'—'}</td>
+      <td style="color:#6b7280;">${job?job.job_name:'—'}</td>
+      <td>${co.description}</td>
+      <td style="font-weight:700;color:#d97706;">$${amt.toFixed(2)}</td>
+      <td><span class="badge" style="${co.status==='Approved'?'background:#dcfce7;color:#15803d;':co.status==='Rejected'?'background:#fee2e2;color:#dc2626;':'background:#fef9c3;color:#92400e;'}">${co.status}</span></td>
+      <td style="white-space:nowrap;">
+        <button class="ibtn ibtn-edit" onclick="toggleCOStatus('${co.id}')">↻ Status</button>
+        <button class="ibtn ibtn-del" onclick="deleteCO('${co.id}')" style="margin-left:3px;">✕</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('subCOTot').textContent='$'+tot.toFixed(2);
+}
+
+function renderSubInvs(subId){
+  const invs=subsData.invoices.filter(i=>i.sub_id===subId),tbody=document.getElementById('subInvsBody');
+  tbody.innerHTML='';
+  if(!invs.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">No invoices yet.</td></tr>';return;}
+  let tot=0;
+  invs.forEach(inv=>{
+    const job=subsData.jobs.find(j=>j.id===inv.sub_job_id);
+    const amt=parseFloat(inv.amount)||0;tot+=amt;
+    const d=inv.date?new Date(inv.date+'T00:00:00'):null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:11px;color:#6b7280;">${d?fmtDL(d):'—'}</td>
+      <td style="font-weight:600;">${inv.invoice_number||'—'}</td>
+      <td style="color:#6b7280;">${job?job.job_name:'—'}</td>
+      <td>${inv.description||'—'}</td>
+      <td style="font-weight:700;color:#15803d;">$${amt.toFixed(2)}</td>
+      <td><span class="badge" style="${inv.status==='Paid'?'background:#dcfce7;color:#15803d;':inv.status==='Approved'?'background:#dbeafe;color:#1d4ed8;':inv.status==='Disputed'?'background:#fee2e2;color:#dc2626;':'background:#fef9c3;color:#92400e;'}">${inv.status}</span></td>
+      <td><button class="ibtn ibtn-del" onclick="deleteInv('${inv.id}')">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('subInvTot').textContent='$'+tot.toFixed(2);
+}
+
+function renderSubPays(subId){
+  const pays=getSubPays(subId),tbody=document.getElementById('subPaysBody');
+  tbody.innerHTML='';
+  if(!pays.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">No payments yet.</td></tr>';return;}
+  let tot=0;
+  pays.forEach(p=>{
+    const job=subsData.jobs.find(j=>j.id===p.sub_job_id);
+    const amt=parseFloat(p.amount)||0;tot+=amt;
+    const d=p.date?new Date(p.date+'T00:00:00'):null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:11px;color:#6b7280;">${d?fmtDL(d):'—'}</td>
+      <td style="color:#6b7280;">${job?job.job_name:'General'}</td>
+      <td style="font-weight:800;color:#15803d;">$${amt.toFixed(2)}</td>
+      <td>${p.method||'—'}</td>
+      <td style="font-weight:600;">${p.reference||'—'}</td>
+      <td style="color:#6b7280;">${p.note||'—'}</td>
+      <td><button class="ibtn ibtn-del" onclick="deleteSubPay('${p.id}','${subId}')">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('subPayTot').textContent='$'+tot.toFixed(2);
+}
+
+function renderSubInfo(sub){
+  const now=new Date();
+  const licExp=sub.license_expiry?new Date(sub.license_expiry):null;
+  const insExp=sub.insurance_expiry?new Date(sub.insurance_expiry):null;
+  const licWarn=licExp&&(licExp-now)<30*86400000;
+  const insWarn=insExp&&(insExp-now)<30*86400000;
+  document.getElementById('subInfoContent').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;margin-bottom:10px;">Contact Information</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;">
+          <div><span style="color:#9ca3af;">Company:</span> <strong>${sub.company||'—'}</strong></div>
+          <div><span style="color:#9ca3af;">Trade:</span> <strong>${sub.trade||'—'}</strong></div>
+          <div><span style="color:#9ca3af;">Email:</span> <strong>${sub.email||'—'}</strong></div>
+          <div><span style="color:#9ca3af;">Phone:</span> <strong>${sub.phone||'—'}</strong></div>
+          <div><span style="color:#9ca3af;">Emergency:</span> <strong>${sub.emergency_contact||'—'} ${sub.emergency_phone?'('+sub.emergency_phone+')':''}</strong></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;margin-bottom:10px;">License & Insurance</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;">
+          <div><span style="color:#9ca3af;">License #:</span> <strong>${sub.license_number||'—'}</strong></div>
+          <div><span style="color:#9ca3af;">License Exp:</span> <strong style="color:${licWarn?'#dc2626':'inherit'}">${sub.license_expiry||'—'}${licWarn?' ⚠️':''}</strong></div>
+          <div><span style="color:#9ca3af;">Insurance #:</span> <strong>${sub.insurance_number||'—'}</strong></div>
+          <div><span style="color:#9ca3af;">Insurance Exp:</span> <strong style="color:${insWarn?'#dc2626':'inherit'}">${sub.insurance_expiry||'—'}${insWarn?' ⚠️':''}</strong></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;margin-bottom:10px;">Payment & Contract</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;">
+          <div><span style="color:#9ca3af;">Method:</span> <strong>${sub.payment_method||'—'}</strong></div>
+          <div><span style="color:#9ca3af;">Terms:</span> <strong>${sub.payment_terms||'—'}</strong></div>
+          <div><span style="color:#9ca3af;">Status:</span> <strong>${sub.contract_status||'—'}</strong></div>
+          <div><span style="color:#9ca3af;">Rating:</span> <strong>${'⭐'.repeat(Math.min(5,Math.max(1,parseInt(sub.rating)||5)))}</strong></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;margin-bottom:10px;">Notes</div>
+        <div style="font-size:13px;color:#374151;">${sub.notes||'No notes.'}</div>
+      </div>
+    </div>`;
+}
+
+/* ── CRUD OPERATIONS ── */
+function openSubModal(id){
+  editSubId=id||null;
+  document.getElementById('subModalTitle').textContent=id?'Edit Subcontractor':'Add Subcontractor';
+  if(id){
+    const s=subsData.subs.find(x=>x.id===id);
+    document.getElementById('mSName').value=s.name;
+    document.getElementById('mSCo').value=s.company||'';
+    document.getElementById('mSTrade').value=s.trade||'';
+    document.getElementById('mSEmail').value=s.email||'';
+    document.getElementById('mSPhone').value=s.phone||'';
+    document.getElementById('mSECon').value=s.emergency_contact||'';
+    document.getElementById('mSEPhone').value=s.emergency_phone||'';
+    document.getElementById('mSLic').value=s.license_number||'';
+    document.getElementById('mSLicExp').value=s.license_expiry||'';
+    document.getElementById('mSIns').value=s.insurance_number||'';
+    document.getElementById('mSInsExp').value=s.insurance_expiry||'';
+    document.getElementById('mSPayMethod').value=s.payment_method||'Check';
+    document.getElementById('mSPayTerms').value=s.payment_terms||'Net 30';
+    document.getElementById('mSStatus').value=s.contract_status||'Active';
+    document.getElementById('mSRating').value=s.rating||5;
+    document.getElementById('mSNotes').value=s.notes||'';
+  } else {
+    ['mSName','mSCo','mSTrade','mSEmail','mSPhone','mSECon','mSEPhone','mSLic','mSLicExp','mSIns','mSInsExp','mSNotes'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('mSRating').value=5;
+  }
+  document.getElementById('subModal').classList.add('open');
+}
+
+async function saveSub(){
+  const name=document.getElementById('mSName').value.trim();
+  if(!name){alert('Name required.');return;}
+  subsPushUndo();
+  const data={
+    name, company:document.getElementById('mSCo').value.trim(),
+    trade:document.getElementById('mSTrade').value.trim(),
+    email:document.getElementById('mSEmail').value.trim(),
+    phone:document.getElementById('mSPhone').value.trim(),
+    emergency_contact:document.getElementById('mSECon').value.trim(),
+    emergency_phone:document.getElementById('mSEPhone').value.trim(),
+    license_number:document.getElementById('mSLic').value.trim(),
+    license_expiry:document.getElementById('mSLicExp').value||null,
+    insurance_number:document.getElementById('mSIns').value.trim(),
+    insurance_expiry:document.getElementById('mSInsExp').value||null,
+    payment_method:document.getElementById('mSPayMethod').value,
+    payment_terms:document.getElementById('mSPayTerms').value,
+    contract_status:document.getElementById('mSStatus').value,
+    rating:parseInt(document.getElementById('mSRating').value)||5,
+    notes:document.getElementById('mSNotes').value.trim()
+  };
+  try{
+    if(editSubId){
+      const{error}=await db.from('subs').update(data).eq('id',editSubId);
+      if(error)throw error;
+      const i=subsData.subs.findIndex(s=>s.id===editSubId);
+      if(i>=0) subsData.subs[i]={...subsData.subs[i],...data};
+    } else {
+      const{data:row,error}=await db.from('subs').insert(data).select().single();
+      if(error)throw error;
+      subsData.subs.push(row);
+    }
+    closeModals();subsRerender();showToast('✅ Subcontractor saved');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function deleteSub(id){
+  if(!confirm('Delete this subcontractor and all their data?'))return;
+  subsPushUndo();
+  try{
+    await db.from('subs').delete().eq('id',id);
+    subsData.subs=subsData.subs.filter(s=>s.id!==id);
+    subsData.jobs=subsData.jobs.filter(j=>j.sub_id!==id);
+    subsData.cos=subsData.cos.filter(c=>c.sub_id!==id);
+    subsData.invoices=subsData.invoices.filter(i=>i.sub_id!==id);
+    subsData.payments=subsData.payments.filter(p=>p.sub_id!==id);
+    if(selSubId===id) subDetailClose();
+    subsRerender();showToast('✅ Deleted');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+function openSubJobModal(id){
+  editSubJobId=id||null;
+  if(id){
+    const j=subsData.jobs.find(x=>x.id===id);
+    document.getElementById('mJName').value=j.job_name;
+    document.getElementById('mJDesc').value=j.description||'';
+    document.getElementById('mJStart').value=j.start_date||'';
+    document.getElementById('mJEnd').value=j.end_date||'';
+    document.getElementById('mJAmt').value=j.contract_amount||'';
+    document.getElementById('mJRet').value=j.retention_pct||0;
+    document.getElementById('mJStatus').value=j.status||'Active';
+  } else {
+    ['mJName','mJDesc','mJStart','mJEnd','mJAmt'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('mJRet').value=0;
+    document.getElementById('mJStatus').value='Active';
+  }
+  document.getElementById('subJobModal').classList.add('open');
+}
+
+async function saveSubJob(){
+  const name=document.getElementById('mJName').value.trim();
+  if(!name){alert('Job name required.');return;}
+  if(!selSubId){alert('Select a subcontractor first.');return;}
+  subsPushUndo();
+  const data={
+    sub_id:selSubId,
+    job_name:name,
+    description:document.getElementById('mJDesc').value.trim(),
+    start_date:document.getElementById('mJStart').value||null,
+    end_date:document.getElementById('mJEnd').value||null,
+    contract_amount:parseFloat(document.getElementById('mJAmt').value)||0,
+    retention_pct:parseFloat(document.getElementById('mJRet').value)||0,
+    status:document.getElementById('mJStatus').value
+  };
+  try{
+    if(editSubJobId){
+      const{error}=await db.from('sub_jobs').update(data).eq('id',editSubJobId);
+      if(error)throw error;
+      const i=subsData.jobs.findIndex(j=>j.id===editSubJobId);
+      if(i>=0) subsData.jobs[i]={...subsData.jobs[i],...data};
+    } else {
+      const{data:row,error}=await db.from('sub_jobs').insert(data).select().single();
+      if(error)throw error;
+      subsData.jobs.push(row);
+    }
+    closeModals();subsRerender();renderSubDetail(selSubId);showToast('✅ Job saved');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function deleteSubJob(id){
+  if(!confirm('Delete this job and all its data?'))return;
+  subsPushUndo();
+  try{
+    await db.from('sub_jobs').delete().eq('id',id);
+    subsData.jobs=subsData.jobs.filter(j=>j.id!==id);
+    subsData.cos=subsData.cos.filter(c=>c.sub_job_id!==id);
+    subsData.invoices=subsData.invoices.filter(i=>i.sub_job_id!==id);
+    subsData.payments=subsData.payments.filter(p=>p.sub_job_id!==id);
+    subsRerender();if(selSubId)renderSubDetail(selSubId);showToast('✅ Job deleted');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+function openCOModal(){
+  if(!selSubId){alert('Select a subcontractor first.');return;}
+  const jobs=getSubJobs(selSubId);
+  document.getElementById('mCOJob').innerHTML=jobs.map(j=>`<option value="${j.id}">${j.job_name}</option>`).join('')||'<option value="">No jobs</option>';
+  document.getElementById('mCODesc').value='';
+  document.getElementById('mCOAmt').value='';
+  document.getElementById('mCODate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('mCOStatus').value='Pending';
+  document.getElementById('coModal2').classList.add('open');
+}
+
+async function saveCO(){
+  const desc=document.getElementById('mCODesc').value.trim(),amt=parseFloat(document.getElementById('mCOAmt').value);
+  if(!desc){alert('Description required.');return;}
+  subsPushUndo();
+  const data={
+    sub_id:selSubId,
+    sub_job_id:document.getElementById('mCOJob').value||null,
+    description:desc,amount:amt||0,
+    date:document.getElementById('mCODate').value||null,
+    status:document.getElementById('mCOStatus').value
+  };
+  try{
+    const{data:row,error}=await db.from('sub_change_orders').insert(data).select().single();
+    if(error)throw error;
+    subsData.cos.push(row);
+    closeModals();subsRerender();renderSubDetail(selSubId);showToast('✅ Change order added');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function toggleCOStatus(id){
+  const co=subsData.cos.find(c=>c.id===id);if(!co)return;
+  const statuses=['Pending','Approved','Rejected'];
+  const next=statuses[(statuses.indexOf(co.status)+1)%statuses.length];
+  try{
+    await db.from('sub_change_orders').update({status:next}).eq('id',id);
+    co.status=next;
+    subsRerender();if(selSubId)renderSubDetail(selSubId);showToast('✅ Status → '+next);
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function deleteCO(id){
+  if(!confirm('Delete this change order?'))return;
+  subsPushUndo();
+  try{
+    await db.from('sub_change_orders').delete().eq('id',id);
+    subsData.cos=subsData.cos.filter(c=>c.id!==id);
+    subsRerender();if(selSubId)renderSubDetail(selSubId);showToast('✅ Deleted');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+function openInvModal(){
+  if(!selSubId){alert('Select a subcontractor first.');return;}
+  const jobs=getSubJobs(selSubId);
+  document.getElementById('mIJob').innerHTML=jobs.map(j=>`<option value="${j.id}">${j.job_name}</option>`).join('')||'<option value="">No jobs</option>';
+  document.getElementById('mINum').value='';
+  document.getElementById('mIDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('mIAmt').value='';
+  document.getElementById('mIDesc').value='';
+  document.getElementById('mIStatus').value='Pending';
+  document.getElementById('invModal').classList.add('open');
+}
+
+async function saveInv(){
+  const num=document.getElementById('mINum').value.trim(),amt=parseFloat(document.getElementById('mIAmt').value);
+  if(!num){alert('Invoice number required.');return;}
+  if(!amt||amt<=0){alert('Enter a valid amount.');return;}
+  subsPushUndo();
+  const data={
+    sub_id:selSubId,
+    sub_job_id:document.getElementById('mIJob').value||null,
+    invoice_number:num,
+    date:document.getElementById('mIDate').value||null,
+    amount:amt,
+    description:document.getElementById('mIDesc').value.trim(),
+    status:document.getElementById('mIStatus').value
+  };
+  try{
+    const{data:row,error}=await db.from('sub_invoices').insert(data).select().single();
+    if(error)throw error;
+    subsData.invoices.push(row);
+    closeModals();subsRerender();renderSubDetail(selSubId);showToast('✅ Invoice added');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function deleteInv(id){
+  if(!confirm('Delete this invoice?'))return;
+  subsPushUndo();
+  try{
+    await db.from('sub_invoices').delete().eq('id',id);
+    subsData.invoices=subsData.invoices.filter(i=>i.id!==id);
+    subsRerender();if(selSubId)renderSubDetail(selSubId);showToast('✅ Deleted');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+function openSubPayModal(){
+  if(!selSubId){alert('Select a subcontractor first.');return;}
+  const jobs=getSubJobs(selSubId);
+  document.getElementById('mSPJob').innerHTML='<option value="">— General / Not job-specific —</option>'+
+    jobs.map(j=>`<option value="${j.id}">${j.job_name} (owed: $${calcJobTotals(j).owed.toFixed(2)})</option>`).join('');
+  document.getElementById('mSPDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('mSPAmt').value='';
+  document.getElementById('mSPRef').value='';
+  document.getElementById('mSPNote').value='';
+  document.getElementById('subPayModal').classList.add('open');
+}
+
+async function saveSubPay(){
+  const amt=parseFloat(document.getElementById('mSPAmt').value),date=document.getElementById('mSPDate').value;
+  if(!date){alert('Enter a date.');return;}
+  if(!amt||amt<=0){alert('Enter a valid amount.');return;}
+  subsPushUndo();
+  const data={
+    sub_id:selSubId,
+    sub_job_id:document.getElementById('mSPJob').value||null,
+    date,amount:amt,
+    method:document.getElementById('mSPMethod').value,
+    reference:document.getElementById('mSPRef').value.trim(),
+    note:document.getElementById('mSPNote').value.trim()
+  };
+  try{
+    const{data:row,error}=await db.from('sub_payments').insert(data).select().single();
+    if(error)throw error;
+    subsData.payments.push(row);
+    closeModals();subsRerender();renderSubDetail(selSubId);showToast('✅ Payment recorded');
+  }catch(e){showToast('❌ '+e.message);}
+}
+
+async function deleteSubPay(id,subId){
+  if(!confirm('Delete this payment?'))return;
+  subsPushUndo();
+  try{
+    await db.from('sub_payments').delete().eq('id',id);
+    subsData.payments=subsData.payments.filter(p=>p.id!==id);
+    subsRerender();if(subId&&selSubId===subId)renderSubDetail(subId);showToast('✅ Deleted');
+  }catch(e){showToast('❌ '+e.message);}
+}
+</script>
